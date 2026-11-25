@@ -22,4 +22,4 @@ Programa que se sirve de un modelo de ML para clasificar basura y otorgar instru
     pip freeze > requirements.txt
     ```
 ### Correr el servidor
-    Ejecuta `python manage.py runserver` y verifica que abre en `http://127.0.0.1:8000/`.
+    Ejecuta `python manage.py runserver` y verifica que abre en `http://127.0.0.1:8000/login`.
