@@ -1,0 +1,233 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio · BasurClasf</title>
+  <style>
+    :root {
+      --verde: #2e7d32;
+      --verde-claro: #e8f5e9;
+      --gris: #f4f6f5;
+      --texto: #1f2a24;
+      --suave: #5f6b64;
+      --borde: #dfe5e1;
+      --alerta: #f57c00;
+      --alerta-claro: #fff3e0;
+      --error: #c62828;
+      --radio: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--gris);
+      color: var(--texto);
+      min-height: 100vh;
+    }
+
+    /* ---------- Barra superior ---------- */
+    .navbar {
+      background: #fff;
+      border-bottom: 1px solid var(--borde);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { font-weight: 700; font-size: 1.2rem; color: var(--verde); }
+    .usuario { display: flex; align-items: center; gap: 14px; font-size: .95rem; }
+    .btn-salir {
+      background: none; border: 1px solid var(--borde); border-radius: 8px;
+      padding: 6px 12px; cursor: pointer; color: var(--suave); font-size: .9rem;
+    }
+    .btn-salir:hover { border-color: var(--error); color: var(--error); }
+
+    /* ---------- Contenido ---------- */
+    main { max-width: 880px; margin: 32px auto; padding: 0 20px; }
+    .saludo h1 { font-size: 1.6rem; margin-bottom: 4px; }
+    .saludo p { color: var(--suave); margin-bottom: 24px; }
+
+    .tarjeta {
+      background: #fff; border: 1px solid var(--borde);
+      border-radius: var(--radio); padding: 24px; margin-bottom: 24px;
+    }
+    .tarjeta h2 { font-size: 1.15rem; margin-bottom: 16px; }
+
+    /* ---------- Zona de carga ---------- */
+    .zona-carga {
+      border: 2px dashed var(--borde); border-radius: var(--radio);
+      padding: 32px 20px; text-align: center; transition: border-color .2s, background .2s;
+    }
+    .zona-carga.arrastrando { border-color: var(--verde); background: var(--verde-claro); }
+    .zona-carga p { color: var(--suave); margin: 10px 0 18px; }
+    .zona-carga img {
+      max-width: 100%; max-height: 320px; border-radius: 10px; display: none; margin: 0 auto 16px;
+    }
+    .botones { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      border: none; border-radius: 10px; padding: 11px 20px; font-size: .95rem;
+      cursor: pointer; font-weight: 600;
+    }
+    .btn-primario { background: var(--verde); color: #fff; }
+    .btn-primario:hover { background: #256b29; }
+    .btn-primario:disabled { background: #a5c9a7; cursor: not-allowed; }
+    .btn-secundario { background: var(--verde-claro); color: var(--verde); }
+    .btn-secundario:hover { background: #d6ecd8; }
+    input[type="file"] { display: none; }
+    .analizar { margin-top: 20px; text-align: center; }
+
+    /* ---------- Resultados ---------- */
+    .resultado {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px 16px;
+      border: 1px solid var(--borde); border-radius: 12px; padding: 16px; margin-bottom: 14px;
+    }
+    .resultado .material { font-size: 1.1rem; font-weight: 700; }
+    .resultado .confianza { font-weight: 600; color: var(--suave); }
+    .barra { grid-column: 1 / -1; height: 8px; background: var(--gris); border-radius: 99px; overflow: hidden; }
+    .barra span { display: block; height: 100%; background: var(--verde); }
+    .contenedor {
+      grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; font-size: .95rem;
+    }
+    .punto { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,.15); }
+    .consejo { grid-column: 1 / -1; color: var(--suave); font-size: .9rem; }
+
+    .resultado.dificil { border-color: var(--alerta); background: var(--alerta-claro); }
+    .resultado.dificil .barra span { background: var(--alerta); }
+    .etiqueta {
+      display: inline-block; font-size: .75rem; font-weight: 700; padding: 3px 8px;
+      border-radius: 6px; background: var(--alerta); color: #fff; margin-left: 8px; vertical-align: middle;
+    }
+
+    .mensaje-error {
+      background: #ffebee; color: var(--error); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+    }
+
+    /* ---------- Guía rápida ---------- */
+    .guia { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .guia div {
+      border: 1px solid var(--borde); border-radius: 10px; padding: 12px;
+      display: flex; align-items: center; gap: 10px; font-size: .9rem;
+    }
+
+    @media (max-width: 560px) {
+      .navbar { padding: 12px 16px; }
+      .usuario span { display: none; }
+      .tarjeta { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra superior -->
+  <header class="navbar">
+    <div class="logo">♻ BasufClasf</div>
+    <div class="usuario">
+      <span> {{ request.user.username }}</span>
+      <form method="post" action="#">
+        {% csrf_token %}
+        <a href="{% url 'salir' %}" class="btn-salir">Cerrar sesion</a>
+      </form>
+    </div>
+  </header>
+
+  <main>
+    <section class="saludo">
+      <p>Toma o sube una foto de tu residuo </p>
+    </section>
+
+    <!-- RF1 / RF2: capturar y enviar la foto -->
+    <section class="tarjeta">
+      <h2>Analizar residuo</h2>
+
+
+      <form method="post" enctype="multipart/form-data" id="form-analisis">
+        {% csrf_token %}
+        <div class="zona-carga" id="zona-carga">
+          <img id="vista-previa" alt="Vista previa de la imagen">
+          <div id="texto-carga">
+            <div style="font-size:2.5rem">📷</div>
+            <p>Arrastra una imagen aquí o elige una opción</p>
+          </div>
+          <div class="botones">
+            <label class="btn btn-primario" for="input-camara">Tomar foto</label>
+            <label class="btn btn-secundario" for="input-archivo">Subir imagen</label>
+          </div>
+          <!-- capture="environment" abre la cámara trasera en el celular -->
+          <input type="file" id="input-camara" accept="image/*" capture="environment">
+          <input type="file" id="input-archivo" name="imagen" accept="image/png, image/jpeg, image/webp">
+        </div>
+
+        <div class="analizar">
+          <button type="submit" class="btn btn-primario" id="btn-analizar" disabled>Analizar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Resultados (ejemplo estático) -->
+    <section class="tarjeta">
+      <h2>Resultado</h2>
+      <div class="resultado">
+        <div class="material">Plástico</div>
+        <div class="confianza">91%</div>
+        <div class="barra"><span style="width: 91%"></span></div>
+        <div class="contenedor"><span class="punto" style="background:#fdd835"></span>Contenedor: <strong>Amarillo</strong></div>
+        <div class="consejo">💡 Enjuágalo y quítale la tapa.</div>
+      </div>
+      <div class="resultado dificil">
+        <div class="material">Tetra Pak <span class="etiqueta">Difícil de reciclar</span></div>
+        <div class="confianza">48%</div>
+        <div class="barra"><span style="width: 48%"></span></div>
+        <div class="consejo">💡 Llévalo a un centro de acopio.</div>
+      </div>
+    </section>
+
+    <!-- Guía rápida de contenedores -->
+    <section class="tarjeta">
+      <h2>Guía de contenedores</h2>
+      <div class="guia">
+        <div><span class="punto" style="background:#fdd835"></span>Plástico y metal</div>
+        <div><span class="punto" style="background:#1e88e5"></span>Papel y cartón</div>
+        <div><span class="punto" style="background:#43a047"></span>Vidrio</div>
+        <div><span class="punto" style="background:#757575"></span>No reciclable</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const inputCamara  = document.getElementById("input-camara");
+    const inputArchivo = document.getElementById("input-archivo");
+    const vistaPrevia  = document.getElementById("vista-previa");
+    const textoCarga   = document.getElementById("texto-carga");
+    const btnAnalizar  = document.getElementById("btn-analizar");
+    const zona         = document.getElementById("zona-carga");
+
+    function mostrarArchivo(archivo) {
+      if (!archivo || !archivo.type.startsWith("image/")) return;
+      // Siempre se envía por el input con name="imagen"
+      const dt = new DataTransfer();
+      dt.items.add(archivo);
+      inputArchivo.files = dt.files;
+
+      vistaPrevia.src = URL.createObjectURL(archivo);
+      vistaPrevia.style.display = "block";
+      textoCarga.style.display = "none";
+      btnAnalizar.disabled = false;
+    }
+
+    inputCamara.addEventListener("change", e => mostrarArchivo(e.target.files[0]));
+    inputArchivo.addEventListener("change", e => mostrarArchivo(e.target.files[0]));
+
+    ["dragenter", "dragover"].forEach(ev =>
+      zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add("arrastrando"); }));
+    ["dragleave", "drop"].forEach(ev =>
+      zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.remove("arrastrando"); }));
+    zona.addEventListener("drop", e => mostrarArchivo(e.dataTransfer.files[0]));
+
+    document.getElementById("form-analisis").addEventListener("submit", () => {
+      btnAnalizar.disabled = true;
+      btnAnalizar.textContent = "Analizando...";
+    });
+  </script>
+</body>
+</html>
